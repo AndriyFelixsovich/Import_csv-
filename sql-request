@@ -1,0 +1,24 @@
+select
+	category_id,
+	seo_indexing,
+	(
+	select
+		GROUP_CONCAT( cd1.name order by level separator '  >  ')
+	from
+		oc_allegro_category_path cp
+	left join oc_allegro_category cd1 on
+		( cp.path_id = cd1.category_id )
+	where
+		cp.category_id = c.category_id
+	group by
+		cp.category_id) as name
+from
+	oc_allegro_category c
+where
+	category_id = 555
+group by
+	category_id
+order by
+	name asc
+limit 0,
+10
