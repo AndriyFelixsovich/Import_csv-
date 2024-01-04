@@ -1,0 +1,63 @@
+function excel() {
+
+        $query = $this->db->query("SELECT category_id, name_ua FROM " . DB_PREFIX . "allegro_category WHERE parent_id = 1 AND status = 1");
+
+
+        $filename = 'E:\csv.xlsx';
+
+        $uniquePaths = [];
+        $uniquePaths2 = [];
+        $uniquePaths3 = [];
+        $file = fopen($filename, 'w');
+
+        if ($file) {
+            // Додати заголовок файлу
+            fwrite($file, 'ID ; Path' . PHP_EOL);
+
+//            $count = 1;
+
+            foreach ($query->rows as $row) {
+                $nextCategoryId = $row['category_id'];
+
+                $nestedQuery = $this->db->query("SELECT category_id, name_ua FROM " . DB_PREFIX . "allegro_category WHERE parent_id = $nextCategoryId AND status = 1");
+
+                foreach ($nestedQuery->rows as $nestedRow) {
+                    $nextPrevCategoryId = $nestedRow['category_id'];
+                    $nextPrevCategory = $this->db->query("SELECT category_id, name_ua FROM " . DB_PREFIX . "allegro_category WHERE parent_id = $nextPrevCategoryId AND status = 1");
+
+                    if ($nextPrevCategory->num_rows > 0) {
+                        foreach ($nextPrevCategory->rows as $nestedPrevRow) {
+
+                            $pathc = $row['category_id'] . ' ; ' . $row['name_ua'];
+
+                            if(!in_array($pathc,$uniquePaths)) {
+                            fwrite($file, $pathc . PHP_EOL);
+                            }
+
+                            $pathc2 = $nestedRow['category_id'] . ' ; ' . $row['name_ua'] . '/' . $nestedRow['name_ua'];
+
+                            if(!in_array($pathc2,$uniquePaths2)) {
+                                fwrite($file, $pathc2 . PHP_EOL);
+                            }
+                            $pathc3 = $nestedPrevRow['category_id'] . ' ; ' . $row['name_ua'] . '/' . $nestedRow['name_ua'] . '/' . $nestedPrevRow['name_ua'];
+                            if(!in_array($pathc3,$uniquePaths3)) {
+                                fwrite($file, $pathc3 . PHP_EOL);
+                            }
+
+                            $uniquePaths[] = $pathc;
+                            $uniquePaths2[] =  $pathc2 ;
+                            $uniquePaths3[] =$pathc3;
+//                            $count++;
+                        }
+                    }
+                }
+            }
+
+            fclose($file);
+
+            echo 'Results have been saved to ' . $filename;
+        } else {
+            echo 'Error opening file';
+        }
+
+    }
